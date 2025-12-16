@@ -943,7 +943,7 @@ Commit 메시지:
 
 ## 📝 라이선스 및 저작권
 
-**MIT License © 2025 DungeonChat Development Team**
+**MIT License © 2025 Jin Young Hwa**
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자유롭게 사용, 수정, 배포할 수 있습니다.
 
@@ -957,7 +957,7 @@ Commit 메시지:
 
 ### 제작자 정보
 
-**DungeonChat Development Team**
+**Jin Young Hwa**
 - 개발 기간: 2025년 12월
 - 프로젝트 규모: 5,500+ 라인 코드, 2,000+ 라인 문서
 - 테스트: 1,500+ 테스트 케이스
