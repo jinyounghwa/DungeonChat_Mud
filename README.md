@@ -1145,7 +1145,7 @@ npm audit fix          # 자동 수정
 
 [⭐ 별 주기](https://github.com/jinyounghwa/DungeonChat_Mud) | [🐛 버그 리포트](https://github.com/jinyounghwa/DungeonChat_Mud/issues) | [💬 토론](https://github.com/jinyounghwa/DungeonChat_Mud/discussions)
 
-**Made with Jin Young Hwa**
+**Made by Jin Young Hwa**
 
 </div>
 
