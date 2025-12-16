@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9%2B-blue)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/Node-20%2B-green)](https://nodejs.org/)
 [![Docker](https://img.shields.io/badge/Docker-20.10%2B-blue)](https://www.docker.com/)
-[![Updated](https://img.shields.io/badge/Updated-Dec%202024-orange)](https://github.com/your-repo/dungeonchat)
+[![Updated](https://img.shields.io/badge/Updated-Dec%202025-orange)](https://github.com/your-repo/dungeonchat)
 [![Security](https://img.shields.io/badge/Security-Latest-green)](https://github.com/your-repo/dungeonchat)
 
 ## 📖 프로젝트 개요
