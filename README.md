@@ -989,11 +989,10 @@ Commit 메시지:
 
 ## 📞 지원 및 문의
 
-- 📧 **이메일**: your-email@example.com
+- 📧 **이메일**: timotolkie@gmail.com
 - 🐛 **버그 리포트**: [GitHub Issues](https://github.com/your-repo/dungeonchat/issues)
 - 💬 **토론**: [GitHub Discussions](https://github.com/your-repo/dungeonchat/discussions)
-- 📖 **문서**: [DEPLOYMENT.md](DEPLOYMENT.md) | [PROJECT_STATUS.md](PROJECT_STATUS.md) | [CLAUDE.md](CLAUDE.md)
-
+- 📖 **문서**: [DEPLOYMENT.md](DEPLOYMENT.md) | [PROJECT_STATUS.md](PROJECT_STATUS.md) |
 ---
 
 ## 🌟 별 주기
