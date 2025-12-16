@@ -1,0 +1,300 @@
+.mypage {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 2rem;
+}
+
+.mypage.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-message {
+  text-align: center;
+  color: #666;
+  font-size: 1.2rem;
+}
+
+.mypage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.mypage-header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.5rem;
+}
+
+.character-card {
+  margin: 1rem;
+  padding: 1.5rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.character-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.class-icon {
+  font-size: 2rem;
+}
+
+.character-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.character-header p {
+  margin: 0;
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.character-meta {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-item .label {
+  color: #666;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.meta-item .value {
+  color: #333;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.exp-bar {
+  position: relative;
+  height: 1.5rem;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.exp-fill {
+  height: 100%;
+  background-color: #10b981;
+  transition: width 0.3s ease;
+}
+
+.exp-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  font-size: 0.75rem;
+  font-weight: 600;
+  z-index: 1;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  padding: 1rem;
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tab {
+  flex: 1;
+  padding: 0.75rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #666;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.tab:hover {
+  color: #3b82f6;
+}
+
+.tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+.tab-content {
+  min-height: 300px;
+  padding: 1rem;
+}
+
+.stats-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.stat-bar {
+  flex: 1;
+  height: 1rem;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stat-fill {
+  height: 100%;
+  background-color: #ef4444;
+  transition: width 0.3s ease;
+}
+
+.stat-value {
+  min-width: 80px;
+  text-align: right;
+  color: #333;
+  font-weight: 600;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.inventory-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.inventory-section {
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.inventory-section h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #999;
+  font-size: 0.875rem;
+}
+
+.battles-panel {
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin: 1rem;
+}
+
+.btn {
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #64748b;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #475569;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .tabs {
+    padding: 0.5rem;
+  }
+
+  .tab {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+
+  .character-meta {
+    gap: 1rem;
+  }
+}
