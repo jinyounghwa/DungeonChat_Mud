@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
+import { RagService } from '../../ai/rag.service';
 import { CreateCharacterDto } from '../dtos/create-character.dto';
 import { CHARACTER_STATS, EXP_TABLE } from '../constants/character-stats';
 import { SaveService } from './save.service';
@@ -8,6 +9,7 @@ import { SaveService } from './save.service';
 export class CharacterService {
   constructor(
     private readonly db: DatabaseService,
+    private readonly ragService?: RagService,
     private readonly saveService?: SaveService,
   ) {}
 
@@ -147,6 +149,25 @@ export class CharacterService {
         def: newDef,
       },
     });
+
+    // Embed level-up event in RAG
+    if (leveledUp && this.ragService) {
+      const levelUpSummary = `레벨 ${character.level}에서 레벨 ${newLevel}로 올랐습니다. HP +${newMaxHp - character.maxHp}, ATK +${Math.round(newAtk - character.atk)}, DEF +${Math.round(newDef - character.def)}`;
+      this.ragService.embedGameEvent(
+        characterId,
+        'level_up',
+        levelUpSummary,
+        {
+          oldLevel: character.level,
+          newLevel,
+          hpIncrease: newMaxHp - character.maxHp,
+          atkIncrease: Math.round(newAtk - character.atk),
+          defIncrease: Math.round(newDef - character.def),
+        },
+      ).catch(() => {
+        // Silently fail
+      });
+    }
 
     // Auto-save on level up
     if (leveledUp && this.saveService) {

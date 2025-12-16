@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 import { AiService } from '../../ai/ai.service';
+import { RagService } from '../../ai/rag.service';
 import { CharacterService } from './character.service';
 import { SaveService } from './save.service';
 import {
@@ -36,6 +37,7 @@ export class BattleService {
   constructor(
     private readonly db: DatabaseService,
     private readonly aiService: AiService,
+    private readonly ragService: RagService,
     private readonly characterService: CharacterService,
     private readonly saveService: SaveService,
   ) {}
@@ -453,6 +455,21 @@ export class BattleService {
     });
 
     battles.delete(battleId);
+
+    // Embed battle event in RAG
+    const battleSummary = `${battle.monster.name} Lv.${battle.monster.level}을(를) ${battle.result === 'victory' ? '처치' : '패배'}했습니다. ${battle.result === 'victory' ? `${expGained} EXP와 ${goldGained} 골드를 얻었습니다.` : ''}`;
+    await this.ragService.embedGameEvent(
+      battle.character.id,
+      `battle_${battle.result}`,
+      battleSummary,
+      {
+        monsterName: battle.monster.name,
+        monsterLevel: battle.monster.level,
+        floor: character.currentFloor,
+        expGained,
+        goldGained,
+      },
+    );
 
     // Auto-save after battle (victory or defeat)
     if (battle.result === 'victory') {

@@ -25,6 +25,7 @@ export class AiService {
   async generateText(
     messages: Array<{ role: string; content: string }>,
     generationConfig?: GenerationConfig,
+    context?: string,
   ): Promise<string> {
     try {
       const config: GenerationConfig = {
@@ -36,11 +37,20 @@ export class AiService {
         ...generationConfig,
       };
 
+      // Inject context if provided
+      const messagesWithContext = [...messages];
+      if (context) {
+        messagesWithContext.splice(1, 0, {
+          role: 'system',
+          content: `[RETRIEVED CONTEXT]\n${context}\n[END CONTEXT]\n`,
+        });
+      }
+
       const response = await axios.post(
         `${this.baseUrl}/v1/chat/completions`,
         {
           model: this.modelName,
-          messages,
+          messages: messagesWithContext,
           ...config,
         },
         {
@@ -59,7 +69,11 @@ export class AiService {
     }
   }
 
-  async generateDungeonDescription(floor: number, environment: string): Promise<string> {
+  async generateDungeonDescription(
+    floor: number,
+    environment: string,
+    context?: string,
+  ): Promise<string> {
     const systemPrompt = `당신은 판타지 텍스트 MUD 게임의 던전 마스터입니다.
 역할:
 - 플레이어의 던전 탐험을 생생하게 묘사합니다
@@ -79,6 +93,7 @@ export class AiService {
         { role: 'user', content: userPrompt },
       ],
       { max_tokens: 150 },
+      context,
     );
   }
 
@@ -92,6 +107,7 @@ export class AiService {
     playerMaxHp: number,
     monsterHp: number,
     monsterMaxHp: number,
+    context?: string,
   ): Promise<string> {
     const systemPrompt = `당신은 판타지 텍스트 MUD 게임의 전투 해설자입니다.
 전투 장면을 2줄로 생생하게 묘사하세요.
@@ -121,12 +137,14 @@ export class AiService {
         { role: 'user', content: userPrompt },
       ],
       { max_tokens: 150 },
+      context,
     );
   }
 
   async generateMonsterDescription(
     monsterName: string,
     level: number,
+    context?: string,
   ): Promise<string> {
     const systemPrompt = `당신은 판타지 텍스트 MUD 게임의 던전 마스터입니다.
 몬스터 등장 장면을 긴장감 있게 2줄로 묘사하세요.
@@ -141,6 +159,7 @@ export class AiService {
         { role: 'user', content: userPrompt },
       ],
       { max_tokens: 150 },
+      context,
     );
   }
 
@@ -149,6 +168,7 @@ export class AiService {
     hpIncrease: number,
     atkIncrease: number,
     defIncrease: number,
+    context?: string,
   ): Promise<string> {
     const systemPrompt = `당신은 게임 시스템의 알림 메시지를 작성합니다.
 레벨업 축하 메시지를 2줄로 작성하세요.
@@ -169,6 +189,7 @@ export class AiService {
         { role: 'user', content: userPrompt },
       ],
       { max_tokens: 150 },
+      context,
     );
   }
 }

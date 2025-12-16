@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 import { AiService } from '../../ai/ai.service';
+import { RagService } from '../../ai/rag.service';
 import { BattleService } from './battle.service';
 import { CharacterService } from './character.service';
 import {
@@ -23,6 +24,7 @@ export class GameChatService {
   constructor(
     private readonly db: DatabaseService,
     private readonly aiService: AiService,
+    private readonly ragService: RagService,
     private readonly battleService: BattleService,
     private readonly characterService: CharacterService,
   ) {}
@@ -88,9 +90,17 @@ export class GameChatService {
         break;
 
       default:
+        // Query RAG context for better narrative continuity
+        const ragContext = await this.ragService.queryContext(
+          characterId,
+          message,
+          { limit: 5, includeConversations: true, includeBattles: true },
+        );
+
         response = await this.aiService.generateDungeonDescription(
           character.currentFloor,
           '던전',
+          ragContext,
         );
         gameState = { type: 'exploration' };
     }
@@ -103,6 +113,21 @@ export class GameChatService {
         content: response,
       },
     });
+
+    // Embed conversations in RAG for future context
+    await this.ragService.embedConversation(
+      characterId,
+      'user',
+      message,
+      { level: character.level, floor: character.currentFloor },
+    );
+
+    await this.ragService.embedConversation(
+      characterId,
+      'assistant',
+      response,
+      { level: character.level, floor: character.currentFloor },
+    );
 
     return {
       response,
