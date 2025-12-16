@@ -966,8 +966,8 @@ Commit 메시지:
 
 이 프로젝트에 관심 있으신 분들의 기여를 환영합니다!
 
-- 버그 리포트: [GitHub Issues](https://github.com/your-repo/dungeonchat/issues)
-- 기능 요청: [GitHub Issues](https://github.com/your-repo/dungeonchat/issues)
+- 버그 리포트: [GitHub Issues](https://github.com/jinyounghwa/DungeonChat_Mud/issues)
+- 기능 요청: [GitHub Issues](https://github.com/jinyounghwa/DungeonChat_Mud/issues)
 - Pull Request: 언제든 환영합니다
 
 ### 사용한 오픈소스
@@ -990,8 +990,8 @@ Commit 메시지:
 ## 📞 지원 및 문의
 
 - 📧 **이메일**: timotolkie@gmail.com
-- 🐛 **버그 리포트**: [GitHub Issues](https://github.com/your-repo/dungeonchat/issues)
-- 💬 **토론**: [GitHub Discussions](https://github.com/your-repo/dungeonchat/discussions)
+- 🐛 **버그 리포트**: [GitHub Issues](https://github.com/jinyounghwa/DungeonChat_Mud/discussions)
+- 💬 **토론**: [GitHub Discussions](https://github.com/jinyounghwa/DungeonChat_Mud/discussions)
 - 📖 **문서**: [DEPLOYMENT.md](DEPLOYMENT.md) | [PROJECT_STATUS.md](PROJECT_STATUS.md) |
 ---
 
