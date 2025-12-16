@@ -1,2 +1,6 @@
-# DungeonChat_Mud
-DungeonChat Mud Game
+# 🎮 DungeonChat MUD Game
+
+CLI 스타일의 레트로 감성을 가진 모바일 웹 기반 텍스트 던전 RPG (MUD) 게임
+
+**개발 기간**: 2주 (2024년 12월 16일 ~ 12월 31일)
+**상태**: Week 2 진행 중 (85% 완료)
