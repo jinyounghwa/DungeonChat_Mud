@@ -7,6 +7,7 @@ export interface MonsterTemplate {
   atkMultiplier: number;
   defMultiplier: number;
   asciiKey?: keyof typeof MONSTER_ASCII;
+  isBoss?: boolean;
 }
 
 const EARLY_MONSTERS: MonsterTemplate[] = [
@@ -27,12 +28,53 @@ const ADVANCED_MONSTERS: MonsterTemplate[] = [
   { name: '마법사', level: 27, hpMultiplier: 1.4, atkMultiplier: 1.4, defMultiplier: 1.4, asciiKey: 'mage' },
 ];
 
+// Boss monsters for each stage (no level variation for bosses)
+const EARLY_BOSS: MonsterTemplate = {
+  name: '오크 족장',
+  level: 10,
+  hpMultiplier: 2.5,
+  atkMultiplier: 2.2,
+  defMultiplier: 2.0,
+  asciiKey: 'demon', // Using demon ASCII for boss
+  isBoss: true,
+};
+
+const MIDDLE_BOSS: MonsterTemplate = {
+  name: '리치',
+  level: 20,
+  hpMultiplier: 2.8,
+  atkMultiplier: 2.4,
+  defMultiplier: 2.2,
+  asciiKey: 'dragon',
+  isBoss: true,
+};
+
+const ADVANCED_BOSS: MonsterTemplate = {
+  name: '마왕',
+  level: 30,
+  hpMultiplier: 3.5,
+  atkMultiplier: 3.0,
+  defMultiplier: 2.8,
+  asciiKey: 'dragon',
+  isBoss: true,
+};
+
 export function getMonsterForFloor(floor: number, playerLevel: number): MonsterTemplate {
+  // Boss encounters at specific floor milestones
+  if (floor === 10) {
+    return EARLY_BOSS;
+  } else if (floor === 20) {
+    return MIDDLE_BOSS;
+  } else if (floor === 30) {
+    return ADVANCED_BOSS;
+  }
+
+  // Regular monsters for non-boss floors
   let monsters: MonsterTemplate[];
 
-  if (floor <= 10) {
+  if (floor < 10) {
     monsters = EARLY_MONSTERS;
-  } else if (floor <= 20) {
+  } else if (floor < 20) {
     monsters = MIDDLE_MONSTERS;
   } else {
     monsters = ADVANCED_MONSTERS;
@@ -65,6 +107,7 @@ export function calculateMonsterStats(template: MonsterTemplate, baseHp: number 
     atk,
     def,
     ascii,
+    isBoss: template.isBoss || false,
   };
 }
 

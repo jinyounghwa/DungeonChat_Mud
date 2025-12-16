@@ -2,10 +2,14 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { DatabaseService } from '../../database/database.service';
 import { CreateCharacterDto } from '../dtos/create-character.dto';
 import { CHARACTER_STATS, EXP_TABLE } from '../constants/character-stats';
+import { SaveService } from './save.service';
 
 @Injectable()
 export class CharacterService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly saveService?: SaveService,
+  ) {}
 
   async createCharacter(userId: string, createCharacterDto: CreateCharacterDto) {
     const { name, class: characterClass } = createCharacterDto;
@@ -143,6 +147,13 @@ export class CharacterService {
         def: newDef,
       },
     });
+
+    // Auto-save on level up
+    if (leveledUp && this.saveService) {
+      this.saveService.autoSave(characterId, `레벨 업 (Lv.${newLevel})`).catch(() => {
+        // Silently fail
+      });
+    }
 
     return {
       character: this.formatCharacter(updated),

@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { DatabaseService } from '../../database/database.service';
 import { AiService } from '../../ai/ai.service';
 import { CharacterService } from './character.service';
+import { SaveService } from './save.service';
 import {
   calculatePlayerAttack,
   calculateMonsterAttack,
@@ -36,6 +37,7 @@ export class BattleService {
     private readonly db: DatabaseService,
     private readonly aiService: AiService,
     private readonly characterService: CharacterService,
+    private readonly saveService: SaveService,
   ) {}
 
   async startBattle(characterId: string) {
@@ -263,6 +265,50 @@ export class BattleService {
       throw new BadRequestException('Invalid battle');
     }
 
+    // Boss monsters cannot be escaped from
+    if ((battle.monster as any).isBoss) {
+      const monsterAttackResult = calculateMonsterAttack(
+        battle.monster.atk,
+        battle.character.def,
+      );
+
+      battle.character.hp -= monsterAttackResult.damage;
+
+      let statusIndicator = '';
+      if (battle.character.hp <= 0) {
+        battle.isOver = true;
+        battle.result = 'defeat';
+        battle.character.hp = 0;
+        statusIndicator = BATTLE_ASCII.defeat;
+      }
+
+      const damage = monsterAttackResult.damage;
+      const battleUI = formatBattleUI(
+        'YOU',
+        battle.character.hp,
+        battle.character.maxHp,
+        battle.monster.name,
+        battle.monster.hp,
+        battle.monster.maxHp,
+      );
+
+      const narration = `${battle.monster.name}에게서 도망칠 수 없습니다!\n${battle.monster.name}의 공격을 맞았습니다! (데미지: ${damage})`;
+      const formattedNarration = `${battleUI}\n${narration}${statusIndicator ? '\n' + statusIndicator : ''}`;
+
+      return {
+        escaped: false,
+        damage,
+        battleState: {
+          playerHp: battle.character.hp,
+          monsterHp: battle.monster.hp,
+          turn: battle.turn,
+          isOver: battle.isOver,
+          result: battle.result,
+        },
+        aiNarration: formattedNarration,
+      };
+    }
+
     const canEscape = calculateEscapeChance(
       battle.character.class,
       false,
@@ -407,6 +453,18 @@ export class BattleService {
     });
 
     battles.delete(battleId);
+
+    // Auto-save after battle (victory or defeat)
+    if (battle.result === 'victory') {
+      // Trigger auto-save in background (don't await to not delay response)
+      this.saveService.autoSave(battle.character.id, '전투 승리').catch(() => {
+        // Silently fail
+      });
+    } else if (battle.result === 'defeat') {
+      this.saveService.autoSave(battle.character.id, '패배').catch(() => {
+        // Silently fail
+      });
+    }
 
     return {
       result: battle.result,

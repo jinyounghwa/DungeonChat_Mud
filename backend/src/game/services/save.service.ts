@@ -160,4 +160,92 @@ export class SaveService {
 
     return { message: '저장 데이터가 삭제되었습니다.' };
   }
+
+  // Auto-save function (triggered on battle victory, level up, floor change)
+  async autoSave(characterId: string, trigger: string = '자동 저장') {
+    try {
+      // Use slot 0 for auto-save (overwrite each time)
+      // Change to slot 6 (beyond user-accessible slots 1-5) for persistent auto-save
+      const autoSaveSlot = 6;
+
+      const character = await this.db.character.findUnique({
+        where: { id: characterId },
+      });
+
+      if (!character) {
+        return null; // Silently fail for auto-save
+      }
+
+      const inventory = await this.db.inventory.findMany({
+        where: { characterId },
+      });
+
+      const conversations = await this.db.conversation.findMany({
+        where: { characterId },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      });
+
+      const gameState = {
+        character: {
+          id: character.id,
+          name: character.name,
+          class: character.class,
+          level: character.level,
+          exp: character.exp,
+          hp: character.hp,
+          maxHp: character.maxHp,
+          atk: character.atk,
+          def: character.def,
+          currentFloor: character.currentFloor,
+          gold: character.gold,
+        },
+        inventory: inventory.map((item) => ({
+          id: item.id,
+          itemName: item.itemName,
+          itemType: item.itemType,
+          quantity: item.quantity,
+          isEquipped: item.isEquipped,
+        })),
+        conversations: conversations.map((conv) => ({
+          role: conv.role,
+          content: conv.content,
+          createdAt: conv.createdAt,
+        })),
+      };
+
+      const existing = await this.db.saveState.findUnique({
+        where: {
+          characterId_slotNumber: {
+            characterId,
+            slotNumber: autoSaveSlot,
+          },
+        },
+      });
+
+      if (existing) {
+        await this.db.saveState.update({
+          where: { id: existing.id },
+          data: {
+            saveName: `${trigger} - ${new Date().toLocaleTimeString('ko-KR')}`,
+            gameState,
+          },
+        });
+      } else {
+        await this.db.saveState.create({
+          data: {
+            characterId,
+            slotNumber: autoSaveSlot,
+            saveName: `${trigger} - ${new Date().toLocaleTimeString('ko-KR')}`,
+            gameState,
+          },
+        });
+      }
+
+      return true;
+    } catch (error) {
+      // Silently fail for auto-save to not interrupt game flow
+      return false;
+    }
+  }
 }
