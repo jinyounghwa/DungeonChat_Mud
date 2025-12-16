@@ -41,7 +41,7 @@ export class AiService {
         {
           model: this.modelName,
           messages,
-          **config,
+          ...config,
         },
         {
           timeout: 30000,

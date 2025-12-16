@@ -3,6 +3,13 @@ import { DatabaseService } from '../../database/database.service';
 import { AiService } from '../../ai/ai.service';
 import { BattleService } from './battle.service';
 import { CharacterService } from './character.service';
+import {
+  formatMonsterDisplay,
+  formatBattleUI,
+  formatDungeonFloor,
+  formatActionMenu,
+  UI_ASCII,
+} from '../constants/ascii-art';
 
 interface GameContext {
   currentFloor: number;
@@ -56,7 +63,13 @@ export class GameChatService {
 
       case 'battle':
         const battleStart = await this.battleService.startBattle(characterId);
-        response = battleStart.aiNarration;
+        const monsterDisplay = formatMonsterDisplay(
+          battleStart.monster.name,
+          battleStart.monster.level,
+          battleStart.monster.ascii || '',
+        );
+        const actionMenu = formatActionMenu();
+        response = `${monsterDisplay}\n${battleStart.aiNarration}\n${actionMenu}`;
         gameState = {
           type: 'battle',
           battleId: battleStart.battleId,
@@ -131,10 +144,13 @@ export class GameChatService {
 
     const randomEnv = environments[Math.floor(Math.random() * environments.length)];
 
-    return this.aiService.generateDungeonDescription(
+    const dungeonFloor = formatDungeonFloor(character.currentFloor);
+    const description = await this.aiService.generateDungeonDescription(
       character.currentFloor,
       randomEnv,
     );
+
+    return `${dungeonFloor}\n${UI_ASCII.divider}\n${description}`;
   }
 
   private formatCharacterStatus(character: any): string {

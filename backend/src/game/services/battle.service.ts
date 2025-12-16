@@ -13,6 +13,11 @@ import {
   calculateMonsterStats,
 } from '../constants/monsters';
 import { EXP_TABLE } from '../constants/character-stats';
+import {
+  formatBattleUI,
+  STATUS_ASCII,
+  BATTLE_ASCII,
+} from '../constants/ascii-art';
 
 interface BattleState {
   battleId: string;
@@ -136,6 +141,24 @@ export class BattleService {
 
     battle.turn++;
 
+    // Format battle UI with HP bars
+    const battleUI = formatBattleUI(
+      'YOU',
+      battle.character.hp,
+      battle.character.maxHp,
+      battle.monster.name,
+      battle.monster.hp,
+      battle.monster.maxHp,
+    );
+
+    const statusIndicator = battle.result === 'victory'
+      ? BATTLE_ASCII.victory
+      : battle.isOver && battle.result === 'defeat'
+      ? BATTLE_ASCII.defeat
+      : '';
+
+    const formattedNarration = `${battleUI}\n${aiNarration}${statusIndicator ? '\n' + statusIndicator : ''}`;
+
     return {
       playerTurn: {
         damage: playerAttackResult.damage,
@@ -154,7 +177,7 @@ export class BattleService {
         isOver: battle.isOver,
         result: battle.result,
       },
-      aiNarration,
+      aiNarration: formattedNarration,
     };
   }
 
@@ -190,14 +213,28 @@ export class BattleService {
       battle.monster.maxHp,
     );
 
+    let statusIndicator = '';
     if (battle.character.hp <= 0) {
       battle.isOver = true;
       battle.result = 'defeat';
       battle.character.hp = 0;
       aiNarration = `${battle.monster.name}의 공격에 쓰러졌습니다...\n게임 오버!`;
+      statusIndicator = BATTLE_ASCII.defeat;
     }
 
     battle.turn++;
+
+    // Format battle UI with HP bars
+    const battleUI = formatBattleUI(
+      'YOU',
+      battle.character.hp,
+      battle.character.maxHp,
+      battle.monster.name,
+      battle.monster.hp,
+      battle.monster.maxHp,
+    );
+
+    const formattedNarration = `${battleUI}\n${aiNarration}${statusIndicator ? '\n' + statusIndicator : ''}`;
 
     return {
       playerTurn: {
@@ -215,7 +252,7 @@ export class BattleService {
         turn: battle.turn,
         isOver: battle.isOver,
       },
-      aiNarration,
+      aiNarration: formattedNarration,
     };
   }
 
@@ -240,13 +277,27 @@ export class BattleService {
 
       battle.character.hp -= monsterAttackResult.damage;
 
+      let statusIndicator = '';
       if (battle.character.hp <= 0) {
         battle.isOver = true;
         battle.result = 'defeat';
         battle.character.hp = 0;
+        statusIndicator = BATTLE_ASCII.defeat;
       }
 
       const damage = monsterAttackResult.damage;
+
+      const battleUI = formatBattleUI(
+        'YOU',
+        battle.character.hp,
+        battle.character.maxHp,
+        battle.monster.name,
+        battle.monster.hp,
+        battle.monster.maxHp,
+      );
+
+      const narration = `도망 시도에 실패했습니다!\n${battle.monster.name}의 공격을 맞았습니다. (데미지: ${damage})`;
+      const formattedNarration = `${battleUI}\n${narration}${statusIndicator ? '\n' + statusIndicator : ''}`;
 
       return {
         escaped: false,
@@ -258,7 +309,7 @@ export class BattleService {
           isOver: battle.isOver,
           result: battle.result,
         },
-        aiNarration: `도망 시도에 실패했습니다!\n${battle.monster.name}의 공격을 맞았습니다. (데미지: ${damage})`,
+        aiNarration: formattedNarration,
       };
     }
 
@@ -276,6 +327,9 @@ export class BattleService {
 
     battles.delete(battleId);
 
+    const narration = `황급히 도망쳤습니다!\n${escapeDamage > 0 ? `${battle.monster.name}의 공격을 약간 맞았습니다.` : '무사히 탈출했습니다!'}`;
+    const formattedNarration = `${narration}\n${BATTLE_ASCII.escape}`;
+
     return {
       escaped: true,
       damage: escapeDamage,
@@ -284,7 +338,7 @@ export class BattleService {
         isOver: true,
         result: 'escape',
       },
-      aiNarration: `황급히 도망쳤습니다!\n${escapeDamage > 0 ? `${battle.monster.name}의 공격을 약간 맞았습니다.` : '무사히 탈출했습니다!'}`,
+      aiNarration: formattedNarration,
     };
   }
 
