@@ -1076,9 +1076,9 @@ git star
 
 **DungeonChat MUD**는 현대적인 기술과 레트로한 감성이 만나는 프로젝트입니다.
 
-[⭐ 별 주기](https://github.com/your-repo/dungeonchat) | [🐛 버그 리포트](https://github.com/your-repo/dungeonchat/issues) | [💬 토론](https://github.com/your-repo/dungeonchat/discussions)
+[⭐ 별 주기](https://github.com/jinyounghwa/DungeonChat_Mud) | [🐛 버그 리포트](https://github.com/jinyounghwa/DungeonChat_Mud/issues) | [💬 토론](https://github.com/jinyounghwa/DungeonChat_Mud/discussions)
 
-**Made with ❤️ by DungeonChat Team**
+**Made with Jin Young Hwa**
 
 </div>
 
