@@ -19,12 +19,19 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
     }
   };
 
+  // Check if message contains ASCII art (box-drawing characters)
+  const isASCIIArt = () => {
+    const asciiArtChars = ['╔', '╗', '╚', '╝', '║', '═', '┌', '┐', '└', '┘', '─', '├', '┤', '┬', '┴', '┼'];
+    return asciiArtChars.some(char => message.content.includes(char));
+  };
+
   const formatContent = () => {
     switch (message.role) {
       case 'system':
         return `[SYSTEM] ${message.content}`;
       case 'assistant':
-        return `> ${message.content}`;
+        // Don't add prefix for ASCII art responses to preserve formatting
+        return isASCIIArt() ? message.content : `> ${message.content}`;
       case 'user':
         return `$ ${message.content}`;
       default:

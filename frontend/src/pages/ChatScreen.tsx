@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { ChatMessage } from '../components/ChatMessage';
+import { sendChatMessage } from '../api/client';
 import '../styles/ChatScreen.css';
 
 export const ChatScreen = () => {
@@ -36,25 +37,24 @@ export const ChatScreen = () => {
     setIsLoading(true);
 
     try {
-      // TODO: Send message to API and get response
-      // For now, just add a placeholder response
-      setTimeout(() => {
-        addMessage({
-          id: `msg-${Date.now()}-response`,
-          role: 'assistant',
-          content: '더 이상 진행할 수 없습니다. 백엔드를 설정해주세요.',
-          timestamp: new Date(),
-        });
-        setIsLoading(false);
-      }, 500);
+      // Send message to backend
+      const response = await sendChatMessage(character.id, input);
+
+      addMessage({
+        id: `msg-${Date.now()}-response`,
+        role: 'assistant',
+        content: response.response,
+        timestamp: new Date(),
+      });
     } catch (error) {
       console.error('Failed to send message:', error);
       addMessage({
         id: `msg-${Date.now()}-error`,
         role: 'system',
-        content: '[ERROR] 메시지 전송에 실패했습니다.',
+        content: '[ERROR] 메시지 전송에 실패했습니다. 다시 시도해주세요.',
         timestamp: new Date(),
       });
+    } finally {
       setIsLoading(false);
     }
   };

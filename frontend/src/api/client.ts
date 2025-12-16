@@ -107,3 +107,13 @@ export async function finishBattle(battleId: string) {
   const response = await client.post(`/battles/${battleId}/finish`);
   return response.data;
 }
+
+// Game Chat API
+export async function sendChatMessage(characterId: string, message: string) {
+  const client = getApiClient();
+  const response = await client.post('/game/chat', {
+    characterId,
+    message,
+  });
+  return response.data;
+}
