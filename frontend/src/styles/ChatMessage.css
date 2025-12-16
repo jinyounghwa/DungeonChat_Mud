@@ -1,0 +1,105 @@
+.chat-message {
+  margin: 0.5rem 0;
+  font-family: 'JetBrains Mono', 'Courier New', 'Consolas', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.chat-message.system {
+  color: #33ff33;
+}
+
+.chat-message.assistant {
+  color: #00ff00;
+}
+
+.chat-message.user {
+  color: #ffffff;
+}
+
+.chat-message p {
+  margin: 0;
+  padding: 0.25rem 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* HP Bar styles */
+.hp-bar {
+  display: inline-block;
+  width: 100%;
+  height: 1em;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  margin: 0.25rem 0;
+  font-family: 'JetBrains Mono', 'Courier New', 'Consolas', monospace;
+  font-size: 0.75rem;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  background-color: #00ff00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: bold;
+}
+
+.hp-bar-fill.warning {
+  background-color: #ffff00;
+  color: #000;
+}
+
+.hp-bar-fill.danger {
+  background-color: #ff6b6b;
+  color: #fff;
+}
+
+/* Battle options */
+.battle-options {
+  border: 1px solid #2a3f5f;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  color: #00ff00;
+  font-family: 'JetBrains Mono', 'Courier New', 'Consolas', monospace;
+}
+
+.battle-option {
+  padding: 0.25rem 0;
+}
+
+.battle-option button {
+  background: none;
+  border: none;
+  color: #00ff00;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+
+.battle-option button:hover {
+  color: #33ff33;
+}
+
+/* Monster info */
+.monster-info {
+  border: 1px solid #2a3f5f;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  color: #ff6b6b;
+  font-family: 'JetBrains Mono', 'Courier New', 'Consolas', monospace;
+}
+
+.monster-name {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.monster-stat {
+  padding: 0.1rem 0;
+}
