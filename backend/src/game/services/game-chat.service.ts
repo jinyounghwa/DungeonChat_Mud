@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { RagService } from './rag.service';
 import { StorageService } from './storage.service';
+import { GameStateAnalyzerService } from './game-state-analyzer.service';
 
 @Injectable()
 export class GameChatService {
@@ -11,12 +12,18 @@ export class GameChatService {
     private aiService: AiService,
     private ragService: RagService,
     private storageService: StorageService,
+    private analyzer: GameStateAnalyzerService,
   ) {}
 
   async processMessage(
     characterId: string,
     message: string,
-  ): Promise<{ response: string; characterId: string; gameState: any }> {
+  ): Promise<{
+    response: string;
+    characterId: string;
+    gameState: any;
+    stateUpdate?: any;
+  }> {
     let state = this.gameState.get(characterId);
     if (!state) {
       const saved = await this.storageService.loadGameState(characterId);
@@ -52,6 +59,42 @@ export class GameChatService {
 
     const response = await this.aiService.generateResponse(prompt);
 
+    // AI 응답 내용을 분석하여 게임 상태 업데이트
+    const stateUpdate = this.analyzer.analyzeResponse(response, state);
+
+    // 변경된 상태 적용
+    if (stateUpdate.health !== undefined) {
+      state.health = stateUpdate.health;
+    }
+    if (stateUpdate.maxHealth !== undefined) {
+      state.maxHealth = stateUpdate.maxHealth;
+    }
+    if (stateUpdate.experience !== undefined) {
+      state.experience = stateUpdate.experience;
+    }
+    if (stateUpdate.level !== undefined) {
+      state.level = stateUpdate.level;
+    }
+    if (stateUpdate.floor !== undefined) {
+      state.floor = stateUpdate.floor;
+    }
+
+    // 레벨업 로그 출력 (프론트엔드에도 전달)
+    let levelUpMessage = '';
+    if (stateUpdate.leveledUp) {
+      levelUpMessage = `\n🎉 [레벨업!] 레벨 ${state.level - 1} → 레벨 ${state.level}`;
+      console.log(
+        `✨ 캐릭터 ${characterId} 레벨업: ${state.level - 1} → ${state.level}`,
+      );
+    }
+
+    // 상태 변화 로그
+    if (stateUpdate.healthChanged) {
+      console.log(
+        `❤️  캐릭터 ${characterId} 체력 변화: ${stateUpdate.health}/${state.maxHealth}`,
+      );
+    }
+
     await this.ragService.storeContext(
       characterId,
       'Player: ' + message + '\nGM: ' + response,
@@ -60,7 +103,12 @@ export class GameChatService {
     state.lastUpdated = new Date().toISOString();
     await this.storageService.saveGameState(characterId, state);
 
-    return { response, characterId, gameState: state };
+    return {
+      response: response + levelUpMessage,
+      characterId,
+      gameState: state,
+      stateUpdate,
+    };
   }
 
   private createDefaultGameState(characterId: string): any {
