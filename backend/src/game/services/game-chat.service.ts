@@ -74,52 +74,58 @@ export class GameChatService implements OnModuleInit {
     const lastResponses = this.ragService.getContext(characterId, 2);
     const recentResponsesWarning = lastResponses ? `\n[최근 응답 피하기]\n이전 응답: "${lastResponses.substring(0, 100)}..."\n위 응답과 같거나 매우 유사한 내용으로 응답하면 안 됩니다. 다른 관점과 상황으로 응답하세요.` : '';
 
+    // 플레이어 행동에 따른 체력 변화 예상 판단
+    const isAttackAction = /공격|싸우|맞|칠|마법|마력|기술|검|활/.test(message.toLowerCase());
+    const isDefenseAction = /방어|피하|도망|숨|물러|후퇴|회피/.test(message.toLowerCase());
+    const isHealingAction = /회복|힐|치료|먹|약|포션/.test(message.toLowerCase());
+    const isExploreAction = /살펴|보|찾|탐색|조사|주변/.test(message.toLowerCase());
+
+    let healthExpectation = '';
+    if (isAttackAction) {
+      healthExpectation = '전투 상황이므로 데미지가 발생할 수 있다. 플레이어가 공격을 하면 반격을 받을 수 있다.';
+    } else if (isDefenseAction) {
+      healthExpectation = '방어 또는 회피 행동이므로 체력 변화가 없거나 적을 수 있다.';
+    } else if (isHealingAction) {
+      healthExpectation = '회복 행동이므로 체력이 증가해야 한다.';
+    } else if (isExploreAction) {
+      healthExpectation = '탐색 행동이므로 보통 체력 변화가 없거나 사건이 발생할 수 있다.';
+    }
+
     const prompt =
-      '[한국어 전용 지시문]\n' +
-      '오직 한국어(가-힣)로만 응답하세요. 중국어나 다른 언어는 절대 포함하지 마세요.\n\n' +
-      '당신은 던전의 게임마스터입니다.\n' +
-      (gameDocContext ? '[게임 가이드]\n' + gameDocContext + '\n\n' : '') +
-      '[이전 상황]\n' +
-      (previousContext || '게임이 시작됩니다.') +
-      '\n' +
-      '[현재 상태]\n' +
-      '- 레벨: ' +
-      state.level +
-      '\n' +
-      '- 현재 층: ' +
-      state.floor +
-      '\n' +
-      '- 체력: ' +
-      state.health +
-      '/' +
-      state.maxHealth +
-      '\n' +
-      '[플레이어 행동]\n' +
+      '당신은 한국 던전 게임의 게임마스터입니다. 순수한 한국어로만 응답하세요.\n\n' +
+      '게임 상태:\n' +
+      `레벨: ${state.level}\n` +
+      `층: ${state.floor}\n` +
+      `현재 체력: ${state.health}/${state.maxHealth}\n\n` +
+      '이전 이야기:\n' +
+      (previousContext || '게임을 시작한다.') +
+      '\n\n' +
+      '플레이어 행동:\n' +
       message +
-      '\n' +
-      '[응답 규칙]\n' +
-      '1. 정확히 한국어 1-3문장으로만 응답\n' +
-      '2. ">" 로 시작하기\n' +
-      '3. 중국어 절대 금지\n' +
-      '4. ★매 응답에 필수★ 체력 변화를 명시하세요:\n' +
-      '   - 데미지를 받으면: "체력이 XX 감소한다" 또는 "XX의 피해를 입는다"\n' +
-      '   - 회복되면: "체력이 XX 회복된다"\n' +
-      '   - 변화 없으면: "체력이 변하지 않는다" 또는 "체력: ' +
-      state.health +
-      '"\n' +
-      '5. 경험치나 층 변화가 있으면 명시 (경험치 XX 획득, 다음 층으로 이동 등)\n' +
-      '6. 게임 가이드를 참고하여 일관된 스토리 진행\n' +
-      (isRepeatedAction ? '7. 플레이어가 같은 행동을 반복 중입니다. 이전과 완전히 다른 상황 전개를 만들어 새로운 이야기를 진행하세요. 이전 응답과 절대 같은 내용이면 안됩니다.\n' : '7. 각 상황마다 새롭고 창의적인 이야기 전개를 만드세요. 단조로운 반복 응답을 피하세요.\n') +
-      '8. ★★★ 반드시 응답 마지막에 다음 형식으로 선택지를 포함해야 합니다 ★★★\n' +
+      '\n\n' +
+      '상황 분석:\n' +
+      healthExpectation +
+      '\n\n' +
+      '응답 형식 (필수 준수):\n' +
+      '1. ">"로 시작하여 상황을 1-2문장으로 설명\n' +
+      '2. 반드시 체력 변화를 명시 (다음 중 하나 정확히 포함):\n' +
+      '   - 데미지: "체력이 숫자 감소한다" (예: "체력이 15 감소한다")\n' +
+      '   - 회복: "체력이 숫자 회복된다"\n' +
+      '   - 변화 없음: "체력이 변하지 않는다"\n' +
+      '3. 반드시 두 가지 선택지 추가:\n' +
       '[선택지]\n' +
-      '선택1: (첫번째 선택 명령어 - 구체적이고 게임 상황에 맞는 행동)\n' +
-      '선택2: (두번째 선택 명령어 - 첫번째와 다른 행동)\n' +
-      '예시:\n' +
+      '선택1: 행동\n' +
+      '선택2: 행동\n\n' +
+      '규칙:\n' +
+      '- 순수 한국어만 사용 (영어, 중국어, 숫자 금지)\n' +
+      '- 반드시 체력 변화 포함\n' +
+      '- 반드시 두 가지 선택지 포함\n' +
+      '- 짧고 창의적인 이야기\n\n' +
+      '응답 예시:\n' +
+      '> 거대한 오크가 나타나 도끼를 휘두른다! 체력이 12 감소한다.\n' +
       '[선택지]\n' +
-      '선택1: 몬스터를 공격한다\n' +
-      '선택2: 뒤로 물러나며 도망친다\n' +
-      '★★★ [선택지] 태그가 반드시 포함되어야 합니다 ★★★' +
-      recentResponsesWarning;
+      '선택1: 칼로 맞받아 친다\n' +
+      '선택2: 마법으로 반격한다';
 
     const response = await this.aiService.generateResponse(prompt);
 

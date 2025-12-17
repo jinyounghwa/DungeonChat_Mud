@@ -139,7 +139,7 @@ export const ChatScreen: React.FC = () => {
   return (
     <div className="chat-screen">
       <header className="chat-header">
-        <h1>{character.name} (Lv.{character.level})</h1>
+        <h1>{character.name} (Lv.{gameState?.level || character.level})</h1>
         <GameStats state={gameState} />
       </header>
 

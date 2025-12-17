@@ -61,8 +61,9 @@ export class AiService {
       model: this.model,
       prompt: prompt,
       stream: false,
-      // 온도 조정: 선택지 형식 준수를 위해 낮춤 (창의성과 안정성 균형)
-      temperature: 0.7,
+      // 온도 조정: 0.6으로 설정 - 지시 준수와 창의성 균형
+      // 0.5는 너무 반복적, 0.7은 지시 무시 경향
+      temperature: 0.6,
       top_p: 0.9,
       top_k: 40,
     });
