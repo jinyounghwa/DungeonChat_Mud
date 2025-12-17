@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/api/client.ts","./src/components/chatmessage.tsx","./src/components/gamechoices.tsx","./src/components/gamestats.tsx","./src/pages/characterselectpage.tsx","./src/pages/chatscreen.tsx","./src/pages/loginpage.tsx","./src/pages/mypage.tsx","./src/store/gamestore.ts","./src/types/game.ts"],"errors":true,"version":"5.9.3"}

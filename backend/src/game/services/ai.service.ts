@@ -58,9 +58,10 @@ export class AiService {
       model: this.model,
       prompt: prompt,
       stream: false,
-      temperature: 0.8,
-      top_p: 0.9,
-      top_k: 40,
+      // 더 창의적인 응답을 위해 온도를 조금 올림
+      temperature: 0.95,
+      top_p: 0.95,
+      top_k: 50,
     });
     return response.data.response || '';
   }

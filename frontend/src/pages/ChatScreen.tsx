@@ -2,13 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { ChatMessage } from '../components/ChatMessage';
 import { GameStats } from '../components/GameStats';
+import { GameChoices } from '../components/GameChoices';
 import { sendMessage } from '../api/client';
+import { GameChoice } from '../types/game';
 import '../styles/chat-screen.css';
 
 export const ChatScreen: React.FC = () => {
   const { character, messages, gameState, addMessage, setGameState } = useGameStore();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentChoices, setCurrentChoices] = useState<GameChoice | null>(null);
   const messagesEnd = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,7 +35,7 @@ export const ChatScreen: React.FC = () => {
 
     try {
       const result = await sendMessage(character.id, input);
-      
+
       addMessage({
         id: `msg-${Date.now()}-response`,
         role: 'assistant',
@@ -41,6 +44,7 @@ export const ChatScreen: React.FC = () => {
       });
 
       setGameState(result.gameState);
+      setCurrentChoices(result.choices || null);
     } catch (error) {
       addMessage({
         id: `msg-${Date.now()}-error`,
@@ -51,6 +55,10 @@ export const ChatScreen: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleChoiceSelect = (choice: string) => {
+    setInput(choice);
   };
 
   if (!character) {
@@ -74,6 +82,13 @@ export const ChatScreen: React.FC = () => {
         {messages.map((msg) => (
           <ChatMessage key={msg.id} message={msg} />
         ))}
+        {currentChoices && (
+          <GameChoices
+            choices={currentChoices}
+            onChoiceSelect={handleChoiceSelect}
+            disabled={isLoading}
+          />
+        )}
         <div ref={messagesEnd} />
       </div>
 

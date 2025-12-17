@@ -1,0 +1,100 @@
+/* 게임 선택지 스타일 */
+.game-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+  padding: 12px;
+  border: 1px solid #0f0;
+  background-color: #050505;
+  border-radius: 4px;
+}
+
+.choices-prompt {
+  font-size: 0.9rem;
+  color: #0f0;
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.choices-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.choice-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #0f0;
+  background-color: #001a00;
+  color: #0f0;
+  cursor: pointer;
+  font-size: 0.95rem;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-family: inherit;
+}
+
+.choice-button:hover:not(:disabled) {
+  background-color: #003300;
+  box-shadow: 0 0 12px rgba(0, 255, 0, 0.4);
+  transform: translateX(4px);
+}
+
+.choice-button:active:not(:disabled) {
+  background-color: #004400;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+}
+
+.choice-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: #088008;
+}
+
+.choice-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  border: 1px solid #0f0;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  background-color: #001a00;
+}
+
+.choice-text {
+  flex: 1;
+  word-wrap: break-word;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .game-choices {
+    margin: 16px 0;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .choice-button {
+    padding: 10px 12px;
+    gap: 10px;
+    font-size: 0.9rem;
+  }
+
+  .choice-number {
+    min-width: 22px;
+    height: 22px;
+    font-size: 0.8rem;
+  }
+
+  .choices-prompt {
+    font-size: 0.85rem;
+  }
+}

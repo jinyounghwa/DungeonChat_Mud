@@ -1,20 +1,48 @@
 .game-stats {
   margin-top: 10px;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid #0f0;
   background-color: #050505;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  color: #0f0;
 }
 
 .stat-row {
   display: flex;
-  gap: 20px;
-  margin: 5px 0;
+  gap: 15px;
+  margin: 8px 0;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid #0f030;
+  background-color: #001a00;
+}
+
+.stat-label {
+  opacity: 0.7;
+  font-size: 0.8rem;
+}
+
+.stat-value {
+  font-weight: bold;
+  color: #00ff00;
+}
+
+/* HP 바 */
+.hp-info {
+  flex: 0 0 auto;
+  min-width: 120px;
 }
 
 .hp-bar {
-  width: 200px;
+  flex: 1;
+  min-width: 150px;
   height: 20px;
   border: 1px solid #0f0;
   background-color: #000;
@@ -25,4 +53,205 @@
   height: 100%;
   background-color: #0f0;
   transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+/* EXP 바 */
+.exp-info {
+  flex: 0 0 auto;
+  min-width: 120px;
+}
+
+.exp-bar {
+  flex: 1;
+  min-width: 150px;
+  height: 12px;
+  border: 1px solid #0066ff;
+  background-color: #000;
+  overflow: hidden;
+}
+
+.exp-fill {
+  height: 100%;
+  background-color: #0066ff;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgba(0, 102, 255, 0.5);
+}
+
+/* 상태 이상 */
+.status-effects {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+
+.status-label {
+  opacity: 0.7;
+  font-size: 0.8rem;
+}
+
+.status-list {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 6px;
+  border: 1px solid #ff6b6b;
+  background-color: #330000;
+  border-radius: 3px;
+  font-size: 0.75rem;
+}
+
+.status-item span:first-child {
+  font-size: 0.9rem;
+}
+
+.status-item .duration {
+  color: #ffaaaa;
+  font-weight: bold;
+}
+
+/* 인벤토리 정보 */
+.inventory-info {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+  padding: 4px 8px;
+  border: 1px solid #00aa00;
+  background-color: #001a00;
+}
+
+.inventory-label {
+  font-size: 0.85rem;
+}
+
+/* 상세정보 토글 */
+.details-toggle {
+  width: 100%;
+  padding: 6px;
+  margin-top: 8px;
+  border: 1px solid #0f0;
+  background-color: #001a00;
+  color: #0f0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.details-toggle:hover {
+  background-color: #003300;
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+}
+
+/* 상세정보 */
+.stats-details {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #0f0;
+  background-color: #001a00;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.detail-section {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #0f030;
+}
+
+.detail-section h4 {
+  margin: 0 0 8px 0;
+  color: #00ff00;
+  font-size: 0.9rem;
+}
+
+.detail-section:last-child {
+  border-bottom: none;
+}
+
+/* 인벤토리 아이템 목록 */
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 6px;
+  border-left: 3px solid;
+  background-color: #000;
+  font-size: 0.8rem;
+}
+
+.item-row.rarity-common {
+  border-left-color: #888888;
+  color: #888888;
+}
+
+.item-row.rarity-uncommon {
+  border-left-color: #44aa44;
+  color: #44aa44;
+}
+
+.item-row.rarity-rare {
+  border-left-color: #4488ff;
+  color: #4488ff;
+}
+
+.item-row.rarity-epic {
+  border-left-color: #aa44ff;
+  color: #aa44ff;
+}
+
+.item-row.rarity-legendary {
+  border-left-color: #ffaa00;
+  color: #ffaa00;
+}
+
+.item-name {
+  flex: 1;
+}
+
+.item-qty {
+  margin-left: 8px;
+  opacity: 0.7;
+}
+
+/* 통계 그리드 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #0066ff;
+  background-color: #000;
+  border-radius: 3px;
+}
+
+.stat-name {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.stat-number {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #0066ff;
 }

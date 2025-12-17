@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { GameChoice } from '../types/game';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -11,6 +12,7 @@ export interface GameResponse {
   response: string;
   characterId: string;
   gameState: any;
+  choices?: GameChoice;
 }
 
 export const sendMessage = async (characterId: string, message: string): Promise<GameResponse> => {

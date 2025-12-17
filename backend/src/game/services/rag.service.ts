@@ -8,7 +8,8 @@ interface GameContext {
 @Injectable()
 export class RagService {
   private contexts = new Map<string, GameContext[]>();
-  private maxMemory = parseInt(process.env.MAX_CONTEXT_MEMORY || '10');
+  // 더 많은 이전 대화를 저장하여 반복 응답 방지
+  private maxMemory = parseInt(process.env.MAX_CONTEXT_MEMORY || '50');
   private contextTimeout = parseInt(process.env.CONTEXT_TIMEOUT || '3600') * 1000;
 
   async storeContext(characterId: string, text: string): Promise<void> {
