@@ -14,27 +14,34 @@ export class ChoiceParserService {
    *        선택2: 명령어2
    */
   parseChoices(response: string): GameChoice | null {
-    // [선택지] 섹션 찾기
-    const choicesMatch = response.match(/\[선택지\]([\s\S]*?)(?:\n(?!\s)|$)/);
+    // [선택지] 섹션 찾기 - 더 유연한 패턴
+    const choicesMatch = response.match(/\[선택지\]([\s\S]*?)(?:\n\n|$)/);
 
     if (!choicesMatch) {
+      console.warn('⚠️  [선택지] 태그를 찾을 수 없습니다');
       return null;
     }
 
     const choicesSection = choicesMatch[1];
+    console.log(`🔍 선택지 섹션: "${choicesSection.substring(0, 100)}..."`);
 
-    // 선택1: 명령어 패턴
-    const choice1Match = choicesSection.match(/선택1\s*[:：]\s*(.+?)(?:\n|$)/);
-    // 선택2: 명령어 패턴
-    const choice2Match = choicesSection.match(/선택2\s*[:：]\s*(.+?)(?:\n|$)/);
+    // 선택1: 명령어 패턴 - 여러 형식 지원
+    const choice1Match = choicesSection.match(/선택\s*1\s*[:：]\s*(.+?)(?:\n|$)/);
+    // 선택2: 명령어 패턴 - 여러 형식 지원
+    const choice2Match = choicesSection.match(/선택\s*2\s*[:：]\s*(.+?)(?:\n|$)/);
 
     if (choice1Match && choice2Match) {
+      const choice1 = choice1Match[1].trim().replace(/[\[\]]/g, '').trim();
+      const choice2 = choice2Match[1].trim().replace(/[\[\]]/g, '').trim();
+
+      console.log(`✓ 선택지 파싱 성공: [${choice1}] / [${choice2}]`);
       return {
-        choice1: choice1Match[1].trim(),
-        choice2: choice2Match[1].trim(),
+        choice1,
+        choice2,
       };
     }
 
+    console.warn('⚠️  선택지 형식을 파싱할 수 없습니다');
     return null;
   }
 

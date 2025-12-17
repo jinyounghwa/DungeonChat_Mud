@@ -117,6 +117,11 @@ export class GameStateAnalyzerService {
     let totalDamage = 0;
     let totalHealing = 0;
 
+    // 0. 먼저 "체력이 변하지 않는다" 같은 표현 확인
+    if (response.match(/(체력|hp).*(변하지\s*않|그대로|유지|무사)/i)) {
+      return { health: currentState.health, details: [] };
+    }
+
     // 1. 구체적인 데미지 타입 감지
     // - 물리 피해: "검", "도끼", "공격", "칼", "맞", "때리다"
     const physicalDamageMatch = response.match(
@@ -158,8 +163,8 @@ export class GameStateAnalyzerService {
       });
     }
 
-    // 4. 일반 데미지: "체력이 20 감소"
-    const generalDamageMatch = response.match(/(체력|hp)\s*(이)?\s*(\d+)\s*(감소|피해|데미지|손상|깎)/i);
+    // 4. 일반 데미지 (체력 감소): "체력이 20 감소", "체력 10 깎", "-15 피해"
+    const generalDamageMatch = response.match(/(체력|hp)\s*(이)?\s*(\d+)\s*(감소|피해|데미지|손상|깎|줄|깎|빠)/i);
     if (generalDamageMatch && details.length === 0) {
       const damage = parseInt(generalDamageMatch[3]);
       totalDamage += damage;
@@ -170,20 +175,34 @@ export class GameStateAnalyzerService {
       });
     }
 
+    // 4-2. "-" 기호로 시작하는 체력 패턴: "-15 피해", "체력 -20"
+    if (details.length === 0) {
+      const minusDamageMatch = response.match(/[-−]([\d]+)\s*(피해|데미지|손상|체력|hp)/i);
+      if (minusDamageMatch) {
+        const damage = parseInt(minusDamageMatch[1]);
+        totalDamage += damage;
+        details.push({
+          type: 'physical',
+          amount: damage,
+          source: '피해',
+        });
+      }
+    }
+
     // 5. 복수 데미지 패턴: "+10 또는 -20"
-    const multipleDamageMatch = response.match(/[-+](\d+)(?!\d)/g);
-    if (multipleDamageMatch && details.length === 0) {
-      multipleDamageMatch.forEach(match => {
-        const value = parseInt(match);
-        if (value < 0) {
-          totalDamage += Math.abs(value);
+    if (details.length === 0) {
+      const multipleDamageMatch = response.match(/[-−](\d+)(?!\d)/g);
+      if (multipleDamageMatch) {
+        multipleDamageMatch.forEach(match => {
+          const value = Math.abs(parseInt(match));
+          totalDamage += value;
           details.push({
             type: 'physical',
-            amount: Math.abs(value),
+            amount: value,
             source: '공격',
           });
-        }
-      });
+        });
+      }
     }
 
     // 6. 회복: "체력이 20 회복", "20 회복", "+30"
@@ -217,8 +236,32 @@ export class GameStateAnalyzerService {
     let finalHealth = currentState.health - totalDamage + totalHealing;
     finalHealth = Math.max(0, Math.min(currentState.maxHealth, finalHealth));
 
+    // 체력 변화가 감지되었거나, "체력이 변하지 않는다" 표현이 명시된 경우
     if (totalDamage > 0 || totalHealing > 0) {
       return { health: finalHealth, details };
+    }
+
+    // 체력 표기가 있으면 인식 (예: "체력: 85/100")
+    const healthStatusMatch = response.match(/(체력|hp)[:\s]+(\d+)\s*[\\/\/]?\s*(\d+)/i);
+    if (healthStatusMatch) {
+      const currentHealth = parseInt(healthStatusMatch[2]);
+      if (currentHealth !== currentState.health) {
+        const damageOrHeal = currentHealth - currentState.health;
+        if (damageOrHeal < 0) {
+          totalDamage = Math.abs(damageOrHeal);
+          details.push({
+            type: 'physical',
+            amount: totalDamage,
+            source: '피해',
+          });
+        } else {
+          totalHealing = damageOrHeal;
+        }
+        return { health: currentHealth, details };
+      } else {
+        // 체력이 표기되었지만 변하지 않음
+        return { health: currentState.health, details: [] };
+      }
     }
 
     return null;

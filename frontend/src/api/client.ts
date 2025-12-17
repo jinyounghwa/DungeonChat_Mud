@@ -5,7 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 const client = axios.create({
   baseURL: API_URL,
-  timeout: 10000,
+  timeout: 60000, // 60초 타임아웃 (Ollama AI 생성 시간 고려)
 });
 
 export interface GameResponse {

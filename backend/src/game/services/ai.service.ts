@@ -21,6 +21,9 @@ export class AiService {
           `[Attempt ${attempt}/${this.maxRetries}] Korean ratio: ${(koreanRatio * 100).toFixed(1)}% | Extracted: ${koreanText.substring(0, 50)}`,
         );
 
+        // 전체 응답 로깅 (디버깅용)
+        console.log(`[원본 응답] ${response.substring(0, 200)}...`);
+
         // If we got clean Korean text, return it regardless of ratio
         if (koreanText && koreanText !== '> 응답을 처리할 수 없습니다.') {
           return koreanText;
@@ -58,10 +61,10 @@ export class AiService {
       model: this.model,
       prompt: prompt,
       stream: false,
-      // 더 창의적인 응답을 위해 온도를 조금 올림
-      temperature: 0.95,
-      top_p: 0.95,
-      top_k: 50,
+      // 온도 조정: 선택지 형식 준수를 위해 낮춤 (창의성과 안정성 균형)
+      temperature: 0.7,
+      top_p: 0.9,
+      top_k: 40,
     });
     return response.data.response || '';
   }
@@ -98,10 +101,27 @@ export class AiService {
 
   /**
    * Remove Chinese characters and extract clean Korean sentences
+   * Preserves [선택지] section or 선택1:/선택2: pattern for choice parsing
    */
   private extractKoreanText(text: string): string {
     if (!text || text.length === 0) {
       return '> 응답을 처리할 수 없습니다.';
+    }
+
+    // First, extract choices section (either [선택지] or 선택1:/선택2: pattern)
+    let choicesSection = '';
+
+    // Try to find [선택지] format first
+    const choicesMatchBracket = text.match(/\[선택지\]([\s\S]*?)$/);
+    if (choicesMatchBracket) {
+      choicesSection = '\n[선택지]' + choicesMatchBracket[1];
+    } else {
+      // If no [선택지] tag, look for 선택1:/선택2: pattern
+      const choicesMatchPattern = text.match(/(선택\s*[1-2]\s*[:：][\s\S]*?)$/);
+      if (choicesMatchPattern) {
+        // Wrap it with [선택지] tag for consistency
+        choicesSection = '\n[선택지]\n' + choicesMatchPattern[1];
+      }
     }
 
     // Remove Chinese characters (CJK Unified Ideographs)
@@ -120,10 +140,14 @@ export class AiService {
     // Pattern 4: English words surrounded by special characters
     cleaned = cleaned.replace(/[<>{}[\]()~`].*?[<>{}[\]()~`]/g, ' ');
 
+    // Remove [선택지] section and 선택1:/선택2: patterns from cleaned text
+    cleaned = cleaned.replace(/\[선택지\][\s\S]*?$/, '');
+    cleaned = cleaned.replace(/선택\s*[1-2]\s*[:：][\s\S]*?$/, '');
+
     // Remove excessive whitespace and newlines but keep structure
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
-    if (cleaned.length === 0) {
+    if (cleaned.length === 0 && !choicesSection) {
       return '> 응답을 처리할 수 없습니다.';
     }
 
@@ -140,13 +164,21 @@ export class AiService {
         );
       });
 
-    if (sentences.length === 0) {
+    if (sentences.length === 0 && !choicesSection) {
       return '> 응답을 처리할 수 없습니다.';
     }
 
-    // Return first 2-3 sentences, prefixed with >
-    const result = sentences.slice(0, 3).join(' ');
-    return result.startsWith('>') ? result : '> ' + result;
+    // Return first 2-3 sentences, prefixed with >, then append choices section
+    let result = '';
+    if (sentences.length > 0) {
+      result = sentences.slice(0, 3).join(' ');
+      result = result.startsWith('>') ? result : '> ' + result;
+    } else {
+      result = '> 게임이 진행된다.';
+    }
+
+    // Append the preserved choices section
+    return result + choicesSection;
   }
 
   /**

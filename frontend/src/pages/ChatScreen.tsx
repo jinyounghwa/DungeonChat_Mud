@@ -3,7 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import { ChatMessage } from '../components/ChatMessage';
 import { GameStats } from '../components/GameStats';
 import { GameChoices } from '../components/GameChoices';
-import { sendMessage } from '../api/client';
+import { sendMessage, getGameState } from '../api/client';
 import { GameChoice } from '../types/game';
 import '../styles/chat-screen.css';
 
@@ -13,6 +13,39 @@ export const ChatScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentChoices, setCurrentChoices] = useState<GameChoice | null>(null);
   const messagesEnd = useRef<HTMLDivElement>(null);
+
+  // 게임 시작 시 기존 게임 상태 불러오기
+  useEffect(() => {
+    if (character && !gameState) {
+      const loadGameState = async () => {
+        const savedState = await getGameState(character.id);
+        if (savedState) {
+          setGameState(savedState);
+        } else {
+          // 새 게임 상태 초기화
+          const initialState = {
+            characterId: character.id,
+            floor: 1,
+            health: 100,
+            maxHealth: 100,
+            experience: 0,
+            level: 1,
+            lastUpdated: new Date().toISOString(),
+            inventory: { maxSlots: 20, items: [] },
+            statusEffects: [],
+            stats: {
+              totalDamageDealt: 0,
+              totalDamageTaken: 0,
+              monstersDefeated: 0,
+              itemsCollected: 0,
+            },
+          };
+          setGameState(initialState);
+        }
+      };
+      loadGameState();
+    }
+  }, [character, gameState, setGameState]);
 
   useEffect(() => {
     messagesEnd.current?.scrollIntoView({ behavior: 'smooth' });
@@ -57,8 +90,46 @@ export const ChatScreen: React.FC = () => {
     }
   };
 
-  const handleChoiceSelect = (choice: string) => {
+  const handleChoiceSelect = async (choice: string) => {
+    // 선택지를 입력 필드에 설정
     setInput(choice);
+
+    // 즉시 메시지 전송
+    if (!character || isLoading) return;
+
+    const userMessage = {
+      id: `msg-${Date.now()}`,
+      role: 'user' as const,
+      content: choice,
+      timestamp: new Date(),
+    };
+
+    addMessage(userMessage);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const result = await sendMessage(character.id, choice);
+
+      addMessage({
+        id: `msg-${Date.now()}-response`,
+        role: 'assistant',
+        content: result.response,
+        timestamp: new Date(),
+      });
+
+      setGameState(result.gameState);
+      setCurrentChoices(result.choices || null);
+    } catch (error) {
+      addMessage({
+        id: `msg-${Date.now()}-error`,
+        role: 'system',
+        content: '[ERROR] 메시지 전송 실패',
+        timestamp: new Date(),
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!character) {
