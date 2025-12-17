@@ -1,58 +1,39 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Param,
-  Body,
-  UseGuards,
-  Query,
-} from '@nestjs/common';
+import { Controller, Post, Get, Body, Param } from '@nestjs/common';
 import { GameChatService } from '../services/game-chat.service';
-import { JwtAuthGuard } from '../../auth/guards/jwt.guard';
 
 @Controller('game')
 export class GameChatController {
-  constructor(private readonly gameChatService: GameChatService) {}
+  constructor(private gameChatService: GameChatService) {}
 
   @Post('chat')
-  @UseGuards(JwtAuthGuard)
   async chat(
-    @Body()
-    body: {
-      characterId: string;
-      message: string;
-      context?: any;
-    },
+    @Body() body: { characterId: string; message: string },
   ) {
     const result = await this.gameChatService.processMessage(
       body.characterId,
       body.message,
-      body.context,
     );
-
     return {
       success: true,
       data: result,
     };
   }
 
-  @Get('conversations/:characterId')
-  @UseGuards(JwtAuthGuard)
-  async getConversations(
-    @Param('characterId') characterId: string,
-    @Query('limit') limit: string = '20',
-  ) {
-    const conversations = await this.gameChatService.getConversationHistory(
-      characterId,
-      parseInt(limit, 10),
-    );
+  @Get('state/:characterId')
+  getGameState(@Param('characterId') characterId: string) {
+    const state = this.gameChatService.getGameState(characterId);
+    return {
+      success: !!state,
+      data: state || null,
+    };
+  }
 
+  @Post('clear/:characterId')
+  async clearCharacter(@Param('characterId') characterId: string) {
+    await this.gameChatService.clearCharacterData(characterId);
     return {
       success: true,
-      data: {
-        conversations,
-        total: conversations.length,
-      },
+      message: 'Character data cleared',
     };
   }
 }

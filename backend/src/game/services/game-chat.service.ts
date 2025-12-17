@@ -1,240 +1,87 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { DatabaseService } from '../../database/database.service';
-import { AiService } from '../../ai/ai.service';
-import { RagService } from '../../ai/rag.service';
-import { BattleService } from './battle.service';
-import { CharacterService } from './character.service';
-import {
-  formatMonsterDisplay,
-  formatBattleUI,
-  formatDungeonFloor,
-  formatActionMenu,
-  UI_ASCII,
-} from '../constants/ascii-art';
-
-interface GameContext {
-  currentFloor: number;
-  characterLevel: number;
-  isInBattle: boolean;
-  lastAction?: string;
-}
+import { Injectable } from '@nestjs/common';
+import { AiService } from './ai.service';
+import { RagService } from './rag.service';
+import { StorageService } from './storage.service';
 
 @Injectable()
 export class GameChatService {
+  private gameState = new Map<string, any>();
+
   constructor(
-    private readonly db: DatabaseService,
-    private readonly aiService: AiService,
-    private readonly ragService: RagService,
-    private readonly battleService: BattleService,
-    private readonly characterService: CharacterService,
+    private aiService: AiService,
+    private ragService: RagService,
+    private storageService: StorageService,
   ) {}
 
   async processMessage(
     characterId: string,
     message: string,
-    context?: Partial<GameContext>,
-  ) {
-    const character = await this.db.character.findUnique({
-      where: { id: characterId },
-    });
-
-    if (!character) {
-      throw new NotFoundException('Character not found');
+  ): Promise<{ response: string; characterId: string; gameState: any }> {
+    let state = this.gameState.get(characterId);
+    if (!state) {
+      const saved = await this.storageService.loadGameState(characterId);
+      state = saved || this.createDefaultGameState(characterId);
+      this.gameState.set(characterId, state);
     }
 
-    // Save user message
-    await this.db.conversation.create({
-      data: {
-        characterId,
-        role: 'user',
-        content: message,
-      },
-    });
+    const previousContext = this.ragService.getContext(characterId, 5);
+    const prompt =
+      '[한국어 전용 지시문]\n' +
+      '오직 한국어(가-힣)로만 응답하세요. 중국어나 다른 언어는 절대 포함하지 마세요.\n\n' +
+      '당신은 던전의 게임마스터입니다.\n' +
+      '[이전 상황]\n' +
+      (previousContext || '게임이 시작됩니다.') +
+      '\n' +
+      '[현재 상태]\n' +
+      '- 레벨: ' +
+      state.level +
+      '\n' +
+      '- 현재 층: ' +
+      state.floor +
+      '\n' +
+      '- 체력: ' +
+      state.health +
+      '/' +
+      state.maxHealth +
+      '\n' +
+      '[플레이어 행동]\n' +
+      message +
+      '\n' +
+      '[응답]\n' +
+      '정확히 한국어 1-3문장으로만 응답. ">" 로 시작하기. 중국어 절대 금지.';
 
-    // Determine action based on message
-    const action = this.parseAction(message.toLowerCase());
+    const response = await this.aiService.generateResponse(prompt);
 
-    let response = '';
-    let gameState: any = null;
-
-    switch (action) {
-      case 'explore':
-        response = await this.handleExplore(character);
-        gameState = { type: 'exploration' };
-        break;
-
-      case 'battle':
-        const battleStart = await this.battleService.startBattle(characterId);
-        const monsterDisplay = formatMonsterDisplay(
-          battleStart.monster.name,
-          battleStart.monster.level,
-          battleStart.monster.ascii || '',
-        );
-        const actionMenu = formatActionMenu();
-        response = `${monsterDisplay}\n${battleStart.aiNarration}\n${actionMenu}`;
-        gameState = {
-          type: 'battle',
-          battleId: battleStart.battleId,
-          monster: battleStart.monster,
-        };
-        break;
-
-      case 'status':
-        response = this.formatCharacterStatus(character);
-        gameState = { type: 'status' };
-        break;
-
-      case 'help':
-        response = this.getHelpMessage();
-        gameState = { type: 'help' };
-        break;
-
-      default:
-        // Query RAG context for better narrative continuity
-        const ragContext = await this.ragService.queryContext(
-          characterId,
-          message,
-          { limit: 5, includeConversations: true, includeBattles: true },
-        );
-
-        response = await this.aiService.generateDungeonDescription(
-          character.currentFloor,
-          '던전',
-          ragContext,
-        );
-        gameState = { type: 'exploration' };
-    }
-
-    // Save AI response
-    await this.db.conversation.create({
-      data: {
-        characterId,
-        role: 'assistant',
-        content: response,
-      },
-    });
-
-    // Embed conversations in RAG for future context
-    await this.ragService.embedConversation(
+    await this.ragService.storeContext(
       characterId,
-      'user',
-      message,
-      { level: character.level, floor: character.currentFloor },
+      'Player: ' + message + '\nGM: ' + response,
     );
 
-    await this.ragService.embedConversation(
-      characterId,
-      'assistant',
-      response,
-      { level: character.level, floor: character.currentFloor },
-    );
+    state.lastUpdated = new Date().toISOString();
+    await this.storageService.saveGameState(characterId, state);
 
+    return { response, characterId, gameState: state };
+  }
+
+  private createDefaultGameState(characterId: string): any {
     return {
-      response,
-      gameState,
-      characterState: {
-        level: character.level,
-        hp: character.hp,
-        maxHp: character.maxHp,
-        currentFloor: character.currentFloor,
-      },
+      characterId,
+      floor: 1,
+      health: 100,
+      maxHealth: 100,
+      experience: 0,
+      level: 1,
+      lastUpdated: new Date().toISOString(),
     };
   }
 
-  private parseAction(message: string): string {
-    if (message.includes('싸우') || message.includes('전투') || message.includes('몬스터')) {
-      return 'battle';
-    }
-    if (
-      message.includes('상태') ||
-      message.includes('스탯') ||
-      message.includes('정보')
-    ) {
-      return 'status';
-    }
-    if (message.includes('도움') || message.includes('명령')) {
-      return 'help';
-    }
-    return 'explore';
+  getGameState(characterId: string): any {
+    return this.gameState.get(characterId) || null;
   }
 
-  private async handleExplore(character: any): Promise<string> {
-    const environments = [
-      '어두운 복도',
-      '석조 방',
-      '보물 창고',
-      '마법 사원',
-      '비밀 통로',
-    ];
-
-    const randomEnv = environments[Math.floor(Math.random() * environments.length)];
-
-    const dungeonFloor = formatDungeonFloor(character.currentFloor);
-    const description = await this.aiService.generateDungeonDescription(
-      character.currentFloor,
-      randomEnv,
-    );
-
-    return `${dungeonFloor}\n${UI_ASCII.divider}\n${description}`;
-  }
-
-  private formatCharacterStatus(character: any): string {
-    return `
-╔════════════════════════════════╗
-║     캐릭터 상태 정보             ║
-╠════════════════════════════════╣
-║ 이름: ${character.name.padEnd(20)}║
-║ 직업: ${this.getClassName(character.class).padEnd(20)}║
-║ 레벨: ${String(character.level).padEnd(20)}║
-║ 경험치: ${String(character.exp).padEnd(17)}║
-╠════════════════════════════════╣
-║ HP: ${String(character.hp + '/' + character.maxHp).padEnd(22)}║
-║ ATK: ${String(Math.round(character.atk)).padEnd(21)}║
-║ DEF: ${String(Math.round(character.def)).padEnd(21)}║
-║ 골드: ${String(character.gold).padEnd(21)}║
-║ 현재층: ${String(character.currentFloor).padEnd(19)}║
-╚════════════════════════════════╝
-    `;
-  }
-
-  private getClassName(classType: string): string {
-    switch (classType) {
-      case 'warrior':
-        return '용사';
-      case 'mage':
-        return '마법사';
-      case 'thief':
-        return '도둑';
-      default:
-        return classType;
-    }
-  }
-
-  private getHelpMessage(): string {
-    return `
-╔════════════════════════════════╗
-║        도움말                   ║
-╠════════════════════════════════╣
-║ 명령어:                        ║
-║ - 앞으로 / 탐험: 던전 탐험     ║
-║ - 싸우기 / 전투: 몬스터 전투   ║
-║ - 상태 / 정보: 캐릭터 정보     ║
-║ - 마이페이지: 상세 정보 보기   ║
-║ - 도움: 이 메시지 표시         ║
-╚════════════════════════════════╝
-    `;
-  }
-
-  async getConversationHistory(
-    characterId: string,
-    limit: number = 20,
-  ) {
-    const conversations = await this.db.conversation.findMany({
-      where: { characterId },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-    });
-
-    return conversations.reverse();
+  async clearCharacterData(characterId: string): Promise<void> {
+    this.gameState.delete(characterId);
+    this.ragService.clearContext(characterId);
+    await this.storageService.deleteGameState(characterId);
   }
 }

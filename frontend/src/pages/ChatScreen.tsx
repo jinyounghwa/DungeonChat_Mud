@@ -1,57 +1,51 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { ChatMessage } from '../components/ChatMessage';
-import { sendChatMessage } from '../api/client';
-import '../styles/ChatScreen.css';
+import { GameStats } from '../components/GameStats';
+import { sendMessage } from '../api/client';
+import '../styles/chat-screen.css';
 
-export const ChatScreen = () => {
-  const { character, messages, addMessage } = useGameStore();
+export const ChatScreen: React.FC = () => {
+  const { character, messages, gameState, addMessage, setGameState } = useGameStore();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const messagesEnd = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEnd.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!input.trim() || !character || isLoading) return;
 
-    if (!input.trim() || !character) {
-      return;
-    }
-
-    // Add user message
-    addMessage({
+    const userMessage = {
       id: `msg-${Date.now()}`,
-      role: 'user',
+      role: 'user' as const,
       content: input,
       timestamp: new Date(),
-    });
+    };
 
+    addMessage(userMessage);
     setInput('');
     setIsLoading(true);
 
     try {
-      // Send message to backend
-      const response = await sendChatMessage(character.id, input);
-
+      const result = await sendMessage(character.id, input);
+      
       addMessage({
         id: `msg-${Date.now()}-response`,
         role: 'assistant',
-        content: response.response,
+        content: result.response,
         timestamp: new Date(),
       });
+
+      setGameState(result.gameState);
     } catch (error) {
-      console.error('Failed to send message:', error);
       addMessage({
         id: `msg-${Date.now()}-error`,
         role: 'system',
-        content: '[ERROR] 메시지 전송에 실패했습니다. 다시 시도해주세요.',
+        content: '[ERROR] 메시지 전송 실패',
         timestamp: new Date(),
       });
     } finally {
@@ -60,37 +54,27 @@ export const ChatScreen = () => {
   };
 
   if (!character) {
-    return (
-      <div className="chat-screen error">
-        <div className="error-message">
-          캐릭터를 선택해주세요.
-        </div>
-      </div>
-    );
+    return <div className="chat-screen error">캐릭터를 선택해주세요</div>;
   }
 
   return (
     <div className="chat-screen">
       <header className="chat-header">
-        <div className="header-left">
-          <span className="character-name">{character.name}</span>
-          <span className="character-level">Lv.{character.level}</span>
-        </div>
-        <button className="menu-button">☰</button>
+        <h1>{character.name} (Lv.{character.level})</h1>
+        <GameStats state={gameState} />
       </header>
 
-      <div className="chat-area">
-        <div className="cli-container">
-          {messages.length === 0 ? (
-            <div className="welcome-message">
-              <p>> 던전에 입장했습니다...</p>
-              <p>> 행운을 빕니다!</p>
-            </div>
-          ) : (
-            messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+      <div className="messages-container">
+        {messages.length === 0 && (
+          <div className="welcome">
+            <p>&gt; 던전에 입장했습니다...</p>
+            <p>&gt; 행운을 빕니다!</p>
+          </div>
+        )}
+        {messages.map((msg) => (
+          <ChatMessage key={msg.id} message={msg} />
+        ))}
+        <div ref={messagesEnd} />
       </div>
 
       <form className="input-form" onSubmit={handleSendMessage}>
@@ -100,14 +84,9 @@ export const ChatScreen = () => {
           onChange={(e) => setInput(e.target.value)}
           placeholder="명령어를 입력하세요..."
           disabled={isLoading}
-          className="message-input"
         />
-        <button
-          type="submit"
-          disabled={isLoading || !input.trim()}
-          className="send-button"
-        >
-          전송
+        <button type="submit" disabled={isLoading || !input.trim()}>
+          {isLoading ? '전송 중...' : '전송'}
         </button>
       </form>
     </div>

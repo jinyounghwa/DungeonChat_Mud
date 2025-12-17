@@ -1,0 +1,26 @@
+.message {
+  margin: 10px 0;
+  padding: 10px;
+  border-left: 3px solid #0f0;
+  font-size: 0.95rem;
+}
+
+.user-msg {
+  color: #00ffff;
+  border-left-color: #00ffff;
+}
+
+.assistant-msg {
+  color: #0f0;
+  border-left-color: #0f0;
+}
+
+.system-msg {
+  color: #ff0000;
+  border-left-color: #ff0000;
+}
+
+.msg-content {
+  display: block;
+  line-height: 1.4;
+}

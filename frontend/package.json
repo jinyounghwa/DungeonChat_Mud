@@ -1,37 +1,29 @@
 {
   "name": "dungeonchat-frontend",
-  "private": true,
   "version": "1.0.0",
+  "description": "Lightweight DungeonChat game frontend",
   "type": "module",
-  "description": "DungeonChat MUD - AI 기반 텍스트 던전 RPG 게임",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "lint": "eslint src --ext .ts,.tsx"
   },
   "dependencies": {
-    "axios": "^1.7.7",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.18",
-    "zustand": "^5.0.9"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.5",
+    "axios": "^1.7.7"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@types/node": "^20.19.0",
-    "@types/react": "^19.2.5",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "eslint": "^9.39.2",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.50.0",
-    "vite": "^7.2.4"
+    "vite": "^5.4.10",
+    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^7.1.1",
+    "@typescript-eslint/parser": "^7.1.1"
   },
   "engines": {
     "node": ">=20.0.0"

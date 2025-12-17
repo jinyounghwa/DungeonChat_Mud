@@ -3,6 +3,10 @@ import { useGameStore } from '../store/gameStore';
 import { createCharacter } from '../api/client';
 import '../styles/CharacterSelectPage.css';
 
+interface CharacterSelectPageProps {
+  onCharacterSelect: () => void;
+}
+
 type CharacterClass = 'warrior' | 'mage' | 'thief';
 
 interface CharacterClassInfo {
@@ -34,10 +38,8 @@ const CHARACTER_CLASSES: Record<CharacterClass, CharacterClassInfo> = {
 };
 
 export const CharacterSelectPage = ({
-  onCharacterCreated,
-}: {
-  onCharacterCreated: (character: any) => void;
-}) => {
+  onCharacterSelect,
+}: CharacterSelectPageProps) => {
   const [characterName, setCharacterName] = useState('');
   const [selectedClass, setSelectedClass] = useState<CharacterClass>('warrior');
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +61,7 @@ export const CharacterSelectPage = ({
 
       if (result.success) {
         setCharacter(result.data);
-        onCharacterCreated(result.data);
+        onCharacterSelect();
       } else {
         setError(result.error || '캐릭터 생성 실패');
       }

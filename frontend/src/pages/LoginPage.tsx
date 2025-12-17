@@ -9,7 +9,6 @@ export const LoginPage = ({ onLoginSuccess }: { onLoginSuccess: () => void }) =>
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const [username, setUsername] = useState('');
 
   const { setUser, setTokens } = useGameStore();
 

@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import '../styles/MyPage.css';
 
-export const MyPage = () => {
+interface MyPageProps {
+  onBack: () => void;
+}
+
+export const MyPage = ({ onBack }: MyPageProps) => {
   const { character } = useGameStore();
   const [activeTab, setActiveTab] = useState<'stats' | 'inventory' | 'battles'>('stats');
 
@@ -43,7 +47,7 @@ export const MyPage = () => {
   return (
     <div className="mypage">
       <header className="mypage-header">
-        <button className="back-button">← 돌아가기</button>
+        <button className="back-button" onClick={onBack}>← 돌아가기</button>
         <h1>마이페이지</h1>
         <div style={{ width: '100px' }}></div>
       </header>

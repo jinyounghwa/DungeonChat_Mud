@@ -1,139 +1,28 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine  # Alpine 이미지: 더 가벼움 (~40MB vs 300MB)
-    environment:
-      POSTGRES_DB: dungeonchat
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    # 로그 크기 제한 (자동 회전)
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "100m"
-        max-file: "3"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d dungeonchat"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  chroma:
-    image: chromadb/chroma:latest
-    ports:
-      - "8000:8000"
-    volumes:
-      - chroma_data:/chroma/chroma
-    # 로그 크기 제한
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "2"
-
-  qwen:
-    image: vllm/vllm-openai:latest
-    command: >
-      --model Qwen/Qwen2.5-7B-Instruct
-      --host 0.0.0.0
-      --port 8001
-      --dtype auto
-      --max-model-len 4096
-      --gpu-memory-utilization 0.8
-    ports:
-      - "8001:8001"
-    volumes:
-      # 모델 캐시: 한번 다운로드 후 재사용 (~15GB, 초기 설정시만 필요)
-      - ./models:/root/.cache/huggingface
-      # 임시 파일 마운트 (불필요한 저장 방지)
-      - /dev/shm:/dev/shm
-    environment:
-      HUGGINGFACE_HUB_CACHE: /root/.cache/huggingface
-      # 메모리 효율성 설정
-      CUDA_VISIBLE_DEVICES: "0"
-      VLLM_ATTENTION_BACKEND: auto
-    # 로그 크기 제한
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "100m"
-        max-file: "2"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    deploy:
-      resources:
-        reservations:
-          memory: 16G  # 메모리 예약
-
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: dungeonchat-backend
+    build: .
     ports:
       - "4000:4000"
     environment:
-      DATABASE_URL: postgresql://admin:password@postgres:5432/dungeonchat
-      QWEN_API_URL: http://qwen:8001
-      CHROMA_URL: http://chroma:8000
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
-      JWT_EXPIRES_IN: 1d
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-refresh-secret-key-change-in-production}
-      JWT_REFRESH_EXPIRES_IN: 7d
-      BCRYPT_SALT_ROUNDS: 10
       PORT: 4000
       NODE_ENV: production
+      OLLAMA_API_URL: http://host.docker.internal:11434
+      CORS_ORIGIN: http://localhost:3000
+    volumes:
+      - ./data:/app/data
     depends_on:
-      postgres:
-        condition: service_healthy
-      chroma:
-        condition: service_started
-      qwen:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped
-    networks:
-      - dungeonchat-network
+      - ollama
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: http://localhost:4000
-    container_name: dungeonchat-frontend
+  ollama:
+    image: ollama/ollama:latest
     ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
-    restart: unless-stopped
-    networks:
-      - dungeonchat-network
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      OLLAMA_MODELS: /root/.ollama/models
 
 volumes:
-  postgres_data:
-  chroma_data:
-
-networks:
-  dungeonchat-network:
-    driver: bridge
+  ollama_data:

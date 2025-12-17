@@ -1,18 +1,20 @@
+import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  // Enable CORS
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'],
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true,
   });
-
+  app.setGlobalPrefix('api');
   const port = process.env.PORT || 4000;
-  await app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
+  await app.listen(port);
+  console.log(`🚀 Server running on http://localhost:${port}`);
+  console.log(`🤖 Ollama API: ${process.env.OLLAMA_API_URL}`);
 }
-bootstrap();
+bootstrap().catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});
