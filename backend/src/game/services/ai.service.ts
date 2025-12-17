@@ -106,6 +106,19 @@ export class AiService {
     // Remove Chinese characters (CJK Unified Ideographs)
     let cleaned = text.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, '');
 
+    // Remove special character + English patterns like _BRANCH_, _TAG_, WORD_WORD, etc
+    // Pattern 1: _SOMETHING_ (underscore wrapped)
+    cleaned = cleaned.replace(/_[A-Za-z0-9]+_/g, ' ');
+
+    // Pattern 2: WORD_WORD or word_word (underscored English words)
+    cleaned = cleaned.replace(/[A-Za-z0-9]+_[A-Za-z0-9_]+/g, ' ');
+
+    // Pattern 3: Multiple special characters like @@@, ###, etc
+    cleaned = cleaned.replace(/[#@$%^&*]{2,}/g, ' ');
+
+    // Pattern 4: English words surrounded by special characters
+    cleaned = cleaned.replace(/[<>{}[\]()~`].*?[<>{}[\]()~`]/g, ' ');
+
     // Remove excessive whitespace and newlines but keep structure
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
