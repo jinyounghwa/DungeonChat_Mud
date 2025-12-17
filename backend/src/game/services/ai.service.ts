@@ -58,7 +58,9 @@ export class AiService {
       model: this.model,
       prompt: prompt,
       stream: false,
-      temperature: 0.5,
+      temperature: 0.8,
+      top_p: 0.9,
+      top_k: 40,
     });
     return response.data.response || '';
   }
@@ -104,34 +106,31 @@ export class AiService {
     // Remove Chinese characters (CJK Unified Ideographs)
     let cleaned = text.replace(/[\u4e00-\u9fff\u3400-\u4dbf]/g, '');
 
-    // Remove English words and other non-Korean characters (but keep numbers, basic punctuation, and Korean)
-    cleaned = cleaned.replace(/[a-zA-Z]+/g, '');
-
-    // Remove excessive whitespace and newlines
+    // Remove excessive whitespace and newlines but keep structure
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
     if (cleaned.length === 0) {
       return '> 응답을 처리할 수 없습니다.';
     }
 
-    // Split into sentences by Korean sentence-ending punctuation
+    // Split into sentences - be less aggressive with punctuation
     const sentences = cleaned
-      .split(/(?<=[.!?。！？!.,;:()（）《》『』「」])\s+|[\n]+/)
+      .split(/[.!?\n]/)
+      .map((s) => s.trim())
       .filter((sentence) => {
-        const trimmed = sentence.trim();
-        // Keep sentences that have Korean characters and are not too short
+        // Keep sentences that have Korean characters and are reasonable length
         return (
-          trimmed.length > 3 &&
-          this.hasKoreanCharacters(trimmed)
+          sentence.length > 0 &&
+          sentence.length < 200 &&
+          this.hasKoreanCharacters(sentence)
         );
-      })
-      .map((s) => s.trim());
+      });
 
     if (sentences.length === 0) {
       return '> 응답을 처리할 수 없습니다.';
     }
 
-    // Return first 3 sentences, prefixed with >
+    // Return first 2-3 sentences, prefixed with >
     const result = sentences.slice(0, 3).join(' ');
     return result.startsWith('>') ? result : '> ' + result;
   }
