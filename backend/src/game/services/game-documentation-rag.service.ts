@@ -23,6 +23,10 @@ export class GameDocumentationRagService {
   private embeddingModel = process.env.OLLAMA_EMBEDDING_MODEL || 'mxbai-embed-large';
   private initialized = false;
 
+  // 문자별로 최근에 반환한 섹션 ID를 추적하여 반복 방지
+  private recentSectionsByCharacter = new Map<string, Set<string>>();
+  private maxRecentSections = 10;
+
   /**
    * Initialize the RAG service by loading and embedding the game documentation
    */
@@ -167,10 +171,12 @@ export class GameDocumentationRagService {
 
   /**
    * Search for relevant sections based on query
+   * 반복되는 섹션을 피하고 다양한 결과 반환
    */
   async search(
     query: string,
     topK: number = 3,
+    characterId?: string,
   ): Promise<SearchResult[]> {
     if (!this.initialized) {
       await this.initialize();
@@ -186,8 +192,14 @@ export class GameDocumentationRagService {
 
       // Calculate similarity for each section
       const results: SearchResult[] = [];
+      const recentSections = characterId ? this.recentSectionsByCharacter.get(characterId) : undefined;
 
       for (const section of this.sections) {
+        // 최근에 반환한 섹션 피하기
+        if (recentSections && recentSections.has(section.id)) {
+          continue;
+        }
+
         // Get or create embedding for section
         let sectionEmbedding = section.embedding;
         if (!sectionEmbedding) {
@@ -203,9 +215,29 @@ export class GameDocumentationRagService {
       }
 
       // Sort by similarity and return top K
-      return results
+      const selectedResults = results
         .sort((a, b) => b.similarity - a.similarity)
         .slice(0, topK);
+
+      // 선택된 섹션을 최근 목록에 추가
+      if (characterId) {
+        if (!this.recentSectionsByCharacter.has(characterId)) {
+          this.recentSectionsByCharacter.set(characterId, new Set());
+        }
+        const recentSet = this.recentSectionsByCharacter.get(characterId)!;
+        selectedResults.forEach(r => recentSet.add(r.section.id));
+
+        // 최대 크기 유지
+        if (recentSet.size > this.maxRecentSections) {
+          const sectionArray = Array.from(recentSet);
+          // 가장 오래된 항목들 제거
+          for (let i = 0; i < recentSet.size - this.maxRecentSections; i++) {
+            recentSet.delete(sectionArray[i]);
+          }
+        }
+      }
+
+      return selectedResults;
     } catch (error) {
       console.error('Search failed:', error);
       return [];
@@ -214,12 +246,14 @@ export class GameDocumentationRagService {
 
   /**
    * Get relevant context for a game scenario
+   * characterId를 전달받아 반복되는 결과 방지
    */
   async getContextForScenario(
     scenario: string,
     topK: number = 3,
+    characterId?: string,
   ): Promise<string> {
-    const results = await this.search(scenario, topK);
+    const results = await this.search(scenario, topK, characterId);
 
     if (results.length === 0) {
       return '';
@@ -252,35 +286,35 @@ export class GameDocumentationRagService {
   /**
    * Get context for monster encounter
    */
-  async getMonsterContext(monsterType: string): Promise<string> {
-    return this.getContextForScenario(`${monsterType} 몬스터 전투`, 2);
+  async getMonsterContext(monsterType: string, characterId?: string): Promise<string> {
+    return this.getContextForScenario(`${monsterType} 몬스터 전투`, 2, characterId);
   }
 
   /**
    * Get context for floor/environment
    */
-  async getFloorContext(floor: number): Promise<string> {
-    return this.getContextForScenario(`${floor}층 던전 환경`, 2);
+  async getFloorContext(floor: number, characterId?: string): Promise<string> {
+    return this.getContextForScenario(`${floor}층 던전 환경`, 2, characterId);
   }
 
   /**
    * Get context for combat/battle
    */
-  async getCombatContext(): Promise<string> {
-    return this.getContextForScenario('전투 전투 시스템 공격 방어', 3);
+  async getCombatContext(characterId?: string): Promise<string> {
+    return this.getContextForScenario('전투 전투 시스템 공격 방어', 3, characterId);
   }
 
   /**
    * Get context for dialogue/conversation
    */
-  async getDialogueContext(): Promise<string> {
-    return this.getContextForScenario('대화 스타일 몬스터 대사', 2);
+  async getDialogueContext(characterId?: string): Promise<string> {
+    return this.getContextForScenario('대화 스타일 몬스터 대사', 2, characterId);
   }
 
   /**
    * Get context based on player action
    */
-  async getContextForPlayerAction(action: string): Promise<string> {
-    return this.getContextForScenario(action, 3);
+  async getContextForPlayerAction(action: string, characterId?: string): Promise<string> {
+    return this.getContextForScenario(action, 3, characterId);
   }
 }

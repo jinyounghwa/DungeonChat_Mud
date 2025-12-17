@@ -54,10 +54,11 @@ export class GameChatService implements OnModuleInit {
     let gameDocContext = '';
     try {
       // Search for relevant sections based on player message and game state
-      gameDocContext = await this.gameDocRagService.getContextForPlayerAction(message);
+      // characterId를 전달하여 반복되는 섹션 방지
+      gameDocContext = await this.gameDocRagService.getContextForPlayerAction(message, characterId);
 
       // Add floor-specific context
-      const floorContext = await this.gameDocRagService.getFloorContext(state.floor);
+      const floorContext = await this.gameDocRagService.getFloorContext(state.floor, characterId);
       if (floorContext) {
         gameDocContext = floorContext + '\n\n---\n\n' + gameDocContext;
       }
